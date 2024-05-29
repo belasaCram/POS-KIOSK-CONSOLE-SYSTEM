@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"FileSetup"},{"l":"Managers"},{"l":"Objects"},{"l":"poskiosksystem"}];updateSearchResults();

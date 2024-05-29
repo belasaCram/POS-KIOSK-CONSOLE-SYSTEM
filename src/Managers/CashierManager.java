@@ -24,39 +24,41 @@ import java.util.Set;
  */
 public class CashierManager {
     
+    // Main method to start the cashier system
     public void start() {
         Scanner scan = new Scanner(System.in);
         System.out.println("--------POS-MACHINE--------");
         System.out.println("1. See Orders");
         System.out.println("2. Exit");
-        while(true){
-        
-            try{
+        while (true) {
+            try {
                 System.out.print("Selection: ");
-                int choice = scan.nextInt();
+                int choice = scan.nextInt(); // Get user input
                 System.out.println("-----------------------------");
 
                 switch (choice) {
-                    case 1 -> getAllOrderList();
+                    case 1 -> getAllOrderList(); // Display all orders
                     case 2 -> {
                         System.out.println("System exit");
-                        return;
+                        return; // Exit the system
                     }
                     default -> System.out.println("Invalid Selection!");
                 }
-            }catch(InputMismatchException ex){
+            } catch (InputMismatchException ex) {
                 System.err.println("Invalid Input!");
+                scan.nextLine(); // Clear the invalid input
             }
-        
         }
     }
      
+    // Method to get and display all orders
     public void getAllOrderList() {
         System.out.println("QueueingNo | Code");
         System.out.println("-----------------------------");
 
         Set<String> displayedCodes = new HashSet<>();
 
+        // Retrieve and display all unique queueing orders
         for (QueueingOrder order : QueueingOrderRepository.getInstance().getAllQueueingOrder()) {
             if (!displayedCodes.contains(order.getCode())) {
                 System.out.println(order.getQueueingNo() + " | " + order.getCode());
@@ -72,28 +74,30 @@ public class CashierManager {
             System.out.println("1. Checkout");
             System.out.println("2. Refresh");
             System.out.println("3. Return to main menu");
-            try{
+            try {
                 System.out.print("Selection: ");
-                int choice = scan.nextInt();
-                scan.nextLine();
+                int choice = scan.nextInt(); // Get user input
+                scan.nextLine(); // Clear the buffer
 
                 switch (choice) {
                     case 1 -> {
                         System.out.print("Enter Order Code: ");
-                        String orderCode = scan.next();
-                        getOrderByCode(orderCode);
+                        String orderCode = scan.next(); // Get the order code from the user
+                        getOrderByCode(orderCode); // Display order details by code
                         return;
                     }
-                    case 2 -> getAllOrderList();
-                    case 3 -> start();
+                    case 2 -> getAllOrderList(); // Refresh the list of orders
+                    case 3 -> start(); // Return to the main menu
                     default -> System.out.println("Invalid input. Please try again.");
                 }
-            }catch(InputMismatchException ex){
+            } catch (InputMismatchException ex) {
                 System.err.println("Input Invalid!");
+                scan.nextLine(); // Clear the invalid input
             }
         }
     }
     
+    // Method to get order details by code
     public void getOrderByCode(String orderCode) {
         List<QueueingOrder> orderList = QueueingOrderRepository.getInstance().getAllQueueingOrderByCode(orderCode);
 
@@ -111,14 +115,15 @@ public class CashierManager {
         System.out.println("Code: " + orderCode);
         System.out.println("-----------------------------");
 
+        // Display order details
         for (QueueingOrder order : orderList) {
             System.out.printf("%-15s x %-3d: $%-7.2f%n", order.getName(), order.getQty(), order.getPrice());
         }
         System.out.println("-----------------------------");
-
-        orderApproval(orderList);
+        orderApproval(orderList); // Proceed to order approval
     }
     
+    // Method to handle order approval
     public void orderApproval(List<QueueingOrder> orders) {
         // Simulate approval logic
         Scanner scanner = new Scanner(System.in);
@@ -127,7 +132,7 @@ public class CashierManager {
         String approval = scanner.nextLine().trim().toLowerCase();
         if (approval.equals("yes")) {
             System.out.println("Order approved. Processing payment...");
-            printReceipt(orders);
+            printReceipt(orders); // Print the receipt
             // Mark order as approved
             for (QueueingOrder order : orders) {
                 order.setStatus(true);
@@ -141,6 +146,7 @@ public class CashierManager {
         }
     }
     
+    // Method to print the receipt of an order
     public void printReceipt(List<QueueingOrder> orders) {
         String queueingNo = String.valueOf(orders.get(0).getQueueingNo());
         Path filePath = Paths.get("C:\\Users\\Marc Nelson Belasa\\Documents\\NetBeansProjects\\File_Input_And_Output_Java\\KioskSystem\\Database\\QueueingReceipts\\" + queueingNo + ".txt");
@@ -156,7 +162,7 @@ public class CashierManager {
                 subtotal += order.getQty() * order.getPrice();
             }
 
-            double tax = calculateTax(subtotal, 0.08);
+            double tax = calculateTax(subtotal, 0.08); // Calculate the tax
             double total = subtotal + tax;
 
             writer.write(String.format("Subtotal: $%.2f%n", subtotal));
@@ -172,6 +178,7 @@ public class CashierManager {
         }
     }
     
+    // Utility method to calculate tax
     private static double calculateTax(double subtotal, double taxRate) {
         return subtotal * taxRate;
     }

@@ -25,27 +25,23 @@ public class PosKioskSystem {
         MonitorManager monitorSystem = new MonitorManager();
 
         Scanner scan = new Scanner(System.in);
-        
-        System.out.println("Welcome to the Customer End System!");
-        System.out.println("1. Kiosk System");
-        System.out.println("2. Cashier System");
-        System.out.println("3. Monitor System");
-        System.out.println("4. Exit");
-        
         while (true) {
-
             try{
-            
+                System.out.println("\nWelcome to the Customer End System!");
+                System.out.println("1. Kiosk System");
+                System.out.println("2. Cashier System");
+                System.out.println("3. Monitor System");
+                System.out.println("4. Exit");
                 System.out.print("Selection: ");
                 int choice = scan.nextInt();
+                scan.nextLine();
 
                 switch (choice) {
-                    case 1 -> kioskSystem.start();
+                    case 1 ->  kioskSystem.start();
                     case 2 -> cashierSystem.start();
                     case 3 -> monitorSystem.start();
                     case 4 -> {
                         System.out.println("System shutdown!");
-                        scan.close();
                         System.exit(0);
                     }
                     default -> System.out.println("Invalid selection. Please choose a number between 1 and 4.");
@@ -53,6 +49,7 @@ public class PosKioskSystem {
             
             }catch(InputMismatchException ex){
                 System.err.println("Invalid Input!");
+                scan.nextLine();
             }
         }
     }
