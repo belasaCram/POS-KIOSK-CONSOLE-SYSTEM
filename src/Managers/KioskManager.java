@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Scanner;
-
+import poskiosksystem.PosKioskSystem;
 /**
  *
  * @author Marc Nelson Belasa
@@ -40,12 +40,12 @@ public class KioskManager {
         Scanner scan = new Scanner(System.in);
         while (true) {
             try {
-                System.out.println("Welcome to the Kiosk System!");
+                System.out.println("\nWelcome to the Kiosk System!");
                 System.out.println("\n--- Main Menu ---");
                 System.out.println("1. Choose Meal");
                 System.out.println("2. View Cart");
                 System.out.println("3. Exit");
-                System.out.print("Selection: ");
+                System.out.print("\nSelection: ");
                 int choice = getIntInput(scan); // Get user input
                 scan.nextLine(); // Clear the buffer
                 switch (choice) {
@@ -53,7 +53,8 @@ public class KioskManager {
                     case 2 -> viewCart(); // Option to view cart
                     case 3 -> {
                         System.out.println("Thank you for using the Kiosk System. Goodbye!");
-                        return; // Exit the system
+                        PosKioskSystem main = new PosKioskSystem();
+                        main.startSystem();
                     }
                     default -> System.out.println("Invalid selection. Please choose a number between 1 and 3.");
                 }
@@ -75,16 +76,20 @@ public class KioskManager {
                 System.out.println("2. Chicken");
                 System.out.println("3. Drinks");
                 System.out.println("4. Return to Main Menu");
-                System.out.print("Selection: ");
+                System.out.print("\nSelection: ");
                 int choice = getIntInput(scan); // Get user input
                 scan.nextLine(); // Clear the buffer
-                if (choice == 4) return; // Return to main menu
-
-                if (choice >= 1 && choice <= 3) {
-                    chooseItem(choice); // Choose item based on category
-                } else {
+                
+                if (choice == 4){ 
+                    start();
+                    return;// Return to main menu
+                }else if (choice <= 1 && choice >= 3) {
                     System.out.println("Invalid selection. Please choose a number between 1 and 4.");
+                    return;
                 }
+                
+                chooseItem(choice); // Choose item based on category
+
             } catch (InputMismatchException ex) {
                 System.err.println("Invalid Input!");
                 scan.nextLine(); // Clear the invalid input
@@ -96,46 +101,67 @@ public class KioskManager {
     private void chooseItem(int categoryId) {
         Scanner scan = new Scanner(System.in);
         List<FoodItem> items = itemRepo.getFoodItemsByCategory(categoryId); // Get items by category
-        Thread thread = new Thread(() -> displayItems(items)); // Display items in a separate thread
-        thread.start();
+        displayItems(items); // Display items
 
         while (true) {
+            System.out.println("\nIf you want to go back type 0.");
             System.out.print("Selection: ");
             int itemId = getIntInput(scan); // Get user input
             scan.nextLine(); // Clear the buffer
 
-            Optional<FoodItem> itemOpt = items.stream().filter(item -> item.getId() == itemId).findFirst(); // Find selected item
-            if (itemOpt.isPresent()) {
-                FoodItem item = itemOpt.get();
-                System.out.print("Enter the quantity: ");
-                int qty = getIntInput(scan); // Get quantity
-                scan.nextLine(); // Clear the buffer
-                
-                // Create and add a new order
-                Order newOrder = new Order(item.getName(), qty, item.getPrice());
-                OrderRepository.getInstance().addOrder(newOrder);
-                System.out.println("Added to cart");
-                break; // Exit the loop after adding to cart
-            } else {
-                System.err.println("Invalid item ID. Please select from the given list.");
+            if(itemId == 0){
+                chooseCategory();
+                return;
             }
+            
+            Optional<FoodItem> itemOpt = items.stream().filter(item -> item.getId() == itemId).findFirst(); // Find selected item
+            if (!itemOpt.isPresent()) {
+                System.err.println("Invalid item ID. Please select from the given list.");
+                return;
+            }
+            
+            FoodItem item = itemOpt.get();
+            System.out.print("Enter the quantity: ");
+            int qty = getIntInput(scan); // Get quantity
+            scan.nextLine(); // Clear the buffer
+
+            // Create and add a new order
+            Order newOrder = new Order(item.getName(), qty, item.getPrice());
+            OrderRepository.getInstance().addOrder(newOrder);
+            System.out.println("Added to cart");
+            break; // Exit the loop after adding to cart
+        }
+    }
+    
+    // Method to display items with a delay
+    private void displayItems(List<FoodItem> items) {
+        System.out.println("\n----- Menu -----\nID   Name   Price");
+        for (FoodItem item : items) {
+            System.out.println(item.getId() + "   " + item.getName() + "   $" + item.getPrice());
         }
     }
 
     // Method to view cart and handle cart menu
     private void viewCart() {
         Scanner scan = new Scanner(System.in);
+        System.out.println("\n----- Cart Menu -----");
         List<Order> orders = OrderRepository.getInstance().getAllOrders(); // Get all orders in the cart
+        if(orders.isEmpty()){
+            System.out.println("----There's no order yet----");
+            System.out.println("----------------------------");
+            return;
+        }
+        
         displayOrders(orders); // Display orders
+        System.out.println("----------------------------");
 
         while (true) {
             try {
-                System.out.println("\n--- Cart Menu ---");
-                System.out.println("1. Proceed to Payment");
-                System.out.println("2. Back to Main Menu");
-                System.out.print("Selection: ");
+                System.out.println("\n1. Proceed to Payment\n2. Back to Main Menu");
+                System.out.print("\nSelection: ");
                 int choice = getIntInput(scan); // Get user input
                 scan.nextLine(); // Clear the buffer
+                
                 switch (choice) {
                     case 1 -> {
                         System.out.println("Proceeding to payment...");
@@ -154,14 +180,15 @@ public class KioskManager {
     // Method to display orders in the cart
     private void displayOrders(List<Order> orders) {
         double subtotal = 0.0;
-        System.out.println("\n--- Your Cart ---");
+        System.out.println("\n----- Your Cart -----");
         for (Order order : orders) {
-            System.out.printf("%-15s x %-3d: $%-7.2f%n", order.getName(), order.getQty(), order.getPrice());
+            System.out.printf("%-10s x %-3d: $%-7.2f%n", order.getName(), order.getQty(), order.getPrice());
             subtotal += order.getQty() * order.getPrice(); // Calculate subtotal
         }
-
+        
         double tax = calculateTax(subtotal, 0.08); // Calculate tax
         double total = subtotal + tax; // Calculate total
+        System.out.println("----------------------");
         System.out.printf("Subtotal: $%.2f%nTax (8%%): $%.2f%nTotal: $%.2f%n", subtotal, tax, total);
     }
 
@@ -169,7 +196,8 @@ public class KioskManager {
     private void printReceipt(List<Order> orders) {
         int queueingNo = generateQueueingNo(); // Generate queueing number
         String orderCode = generateRandomCode(); // Generate random order code
-        Path filePath = Paths.get("C:\\Users\\Marc Nelson Belasa\\Documents\\NetBeansProjects\\File_Input_And_Output_Java\\KioskSystem\\Database\\QueueingReceipts\\" + queueingNo + ".txt");
+        Path fileRoot = Paths.get("Storage\\KioskReceipts");
+        Path filePath = Paths.get( fileRoot + "\\" + queueingNo + ".txt");
 
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)) {
             writer.write("-----------------------------\n");
@@ -187,13 +215,14 @@ public class KioskManager {
 
             double tax = calculateTax(subtotal, 0.08); // Calculate tax
             double total = subtotal + tax; // Calculate total
-
+            writer.write("-----------------------------\n");
             writer.write(String.format("Subtotal: $%.2f%n", subtotal));
             writer.write(String.format("Tax (8%%): $%.2f%n", tax));
+            writer.write("-----------------------------\n");
             writer.write(String.format("Total: $%.2f%n", total));
-
+            writer.write("-----------------------------\n");
             System.out.println("Receipt has been printed.");
-
+            writer.write("-----------------------------\n");
             OrderRepository.getInstance().clearOrder(); // Clear the cart
 
             start(); // Go back to main menu
@@ -211,18 +240,6 @@ public class KioskManager {
             code.append(characters.charAt(random.nextInt(characters.length())));
         }
         return code.toString();
-    }
-
-    // Method to display items with a delay
-    private void displayItems(List<FoodItem> items) {
-        try {
-            for (FoodItem item : items) {
-                Thread.sleep(500); // Pause for 0.5 seconds
-                System.out.println(item.getId() + " " + item.getName() + " - $" + item.getPrice());
-            }
-        } catch (InterruptedException ex) {
-            System.err.print("Interrupted!");
-        }
     }
 
     // Utility method to get an integer input with validation

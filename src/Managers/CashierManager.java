@@ -17,6 +17,7 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import poskiosksystem.PosKioskSystem;
 
 /**
  *
@@ -27,20 +28,22 @@ public class CashierManager {
     // Main method to start the cashier system
     public void start() {
         Scanner scan = new Scanner(System.in);
-        System.out.println("--------POS-MACHINE--------");
-        System.out.println("1. See Orders");
-        System.out.println("2. Exit");
+        System.out.println("\n--------POS-MACHINE--------");
+
         while (true) {
             try {
-                System.out.print("Selection: ");
+                System.out.println("1. See Orders\n2. Exit");
+                System.out.print("\nSelection: ");
                 int choice = scan.nextInt(); // Get user input
-                System.out.println("-----------------------------");
+                scan.nextLine(); // Clear the buffer
 
                 switch (choice) {
                     case 1 -> getAllOrderList(); // Display all orders
                     case 2 -> {
-                        System.out.println("System exit");
-                        return; // Exit the system
+                        System.out.println("Thank you for using the POS System. Goodbye!");
+                        PosKioskSystem main = new PosKioskSystem();
+                        main.startSystem();
+                        break;
                     }
                     default -> System.out.println("Invalid Selection!");
                 }
@@ -53,11 +56,11 @@ public class CashierManager {
      
     // Method to get and display all orders
     public void getAllOrderList() {
+        System.out.println("\n-----------------------------");
         System.out.println("QueueingNo | Code");
         System.out.println("-----------------------------");
 
         Set<String> displayedCodes = new HashSet<>();
-
         // Retrieve and display all unique queueing orders
         for (QueueingOrder order : QueueingOrderRepository.getInstance().getAllQueueingOrder()) {
             if (!displayedCodes.contains(order.getCode())) {
@@ -65,17 +68,22 @@ public class CashierManager {
                 displayedCodes.add(order.getCode());
             }
         }
+        
+        if(displayedCodes.isEmpty()){
+            System.out.println("--- No orders yet ---");
+            System.out.println("-----------------------------");
 
+            return;
+        }
+        
         System.out.println("-----------------------------");
 
         Scanner scan = new Scanner(System.in);
 
         while (true) {
-            System.out.println("1. Checkout");
-            System.out.println("2. Refresh");
-            System.out.println("3. Return to main menu");
+            System.out.println("1. Checkout\n2. Refresh\n3. Return to main menu");
             try {
-                System.out.print("Selection: ");
+                System.out.print("\nSelection: ");
                 int choice = scan.nextInt(); // Get user input
                 scan.nextLine(); // Clear the buffer
 
@@ -141,15 +149,17 @@ public class CashierManager {
             System.out.println("Order not approved. Cancelling order...");
             // Remove the order from the queueing system
             for (QueueingOrder order : orders) {
-                QueueingOrderRepository.getInstance().DeleteQueueingOrder(order.getCode());
+                QueueingOrderRepository.getInstance().deleteQueueingOrder(order.getCode());
             }
         }
     }
     
     // Method to print the receipt of an order
     public void printReceipt(List<QueueingOrder> orders) {
+        String code = String.valueOf(orders.get(0).getCode());
         String queueingNo = String.valueOf(orders.get(0).getQueueingNo());
-        Path filePath = Paths.get("C:\\Users\\Marc Nelson Belasa\\Documents\\NetBeansProjects\\File_Input_And_Output_Java\\KioskSystem\\Database\\QueueingReceipts\\" + queueingNo + ".txt");
+        Path file = Paths.get("Storage\\CashierReceipts");
+        Path filePath = Paths.get (file.toAbsolutePath() + "\\" + code + ".txt");
 
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)) {
             writer.write("-----------------------------\n");
@@ -164,18 +174,21 @@ public class CashierManager {
 
             double tax = calculateTax(subtotal, 0.08); // Calculate the tax
             double total = subtotal + tax;
-
+            writer.write("-----------------------------\n");
             writer.write(String.format("Subtotal: $%.2f%n", subtotal));
             writer.write(String.format("Tax (8%%): $%.2f%n", tax));
+            writer.write("-----------------------------\n");
             writer.write(String.format("Total: $%.2f%n", total));
             writer.write("-----------------------------\n");
             writer.write("Thank you for your purchase!\n");
             writer.write("-----------------------------\n");
-
             System.out.println("Receipt has been printed.");
         } catch (IOException e) {
             System.err.println("Error writing to file: " + e.getMessage());
         }
+        
+        QueueingOrderRepository.getInstance().deleteQueueingOrder(orders.get(0).getCode());
+        orders.clear();
     }
     
     // Utility method to calculate tax

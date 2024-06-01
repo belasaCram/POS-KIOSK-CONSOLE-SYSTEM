@@ -19,8 +19,8 @@ import java.util.Scanner;
  * @author Marc Nelson Belasa
  */
 public class MonitorManager {
-     // Path to the directory containing order queueing receipts
-    private final String ORDER_QUEUEING_PATH = "C:\\Users\\Marc Nelson Belasa\\Documents\\NetBeansProjects\\File_Input_And_Output_Java\\PosKioskSystem\\Storage\\QueueingReceipts\\";
+
+    private Path FILE_ROOT = Paths.get("Storage\\CashierReceipts");
     
     // Main method to start the monitor system
     public void start() {
@@ -30,38 +30,36 @@ public class MonitorManager {
             System.out.println("1. View Approved Orders");
             System.out.println("2. Exit");
             try {
-                System.out.print("Selection: ");
+                System.out.print("\nSelection: ");
                 int choice = scan.nextInt(); // Get user input
-                System.out.println("-----------------------------");
 
                 switch (choice) {
                     case 1 -> displayApprovedOrders(); // Display approved orders
                     case 2 -> {
-                        System.out.println("Exiting Monitor System.");
+                        System.out.println("\nExiting Monitor System.");
                         return; // Exit the system
                     }
-                    default -> System.err.println("Invalid selection. Please choose a number between 1 and 2.");
+                    default -> System.err.println("\nInvalid selection. Please choose a number between 1 and 2.");
                 }
             } catch (InputMismatchException ex) {
-                System.err.println("Input invalid!");
+                System.err.println("\nInput invalid!");
                 scan.nextLine(); // Clear the invalid input
             }
         }
     }
     
-    // Method to display approved orders
     private void displayApprovedOrders() {
         Scanner scan = new Scanner(System.in);
         System.out.println("\n-----------------------------");
         System.out.println("Approved Orders:");
         System.out.println("Code");
         System.out.println("-----------------------------");
-        
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(ORDER_QUEUEING_PATH), "*.txt")) {
-            boolean hasFiles = false; 
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(FILE_ROOT.toAbsolutePath(), "*.txt")) {
+            boolean hasFiles = false;
             for (Path filePath : stream) {
                 String fileName = filePath.getFileName().toString();
-                String baseName = fileName.split("\\.txt")[0]; // Extract base name of the file
+                String baseName = fileName.replaceFirst("\\.txt$", ""); // Extract base name of the file
                 System.out.println(baseName);
                 hasFiles = true;
             }
@@ -69,25 +67,27 @@ public class MonitorManager {
                 System.out.println("No approved orders found.");
             }
         } catch (IOException ex) {
-            System.err.println("Error on finding the files");
+            System.err.println("Error finding the files");
+            ex.printStackTrace();
         }
-        
+
         System.out.println("-----------------------------");
-        
+
         while (true) {
             try {
-                System.out.println("---Selection----");
                 System.out.println("1. Select Order");
                 System.out.println("2. Back");
-                System.out.print("Selection: ");
+                System.out.print("\nSelection: ");
                 int choice = scan.nextInt(); // Get user input
                 scan.nextLine(); // Clear the buffer
 
                 switch (choice) {
-                    case 1 -> orderSelectionByCode(scan); // Select order by code
+                    case 1 -> {
+                        orderSelectionByCode(scan); // Select order by code
+                    } 
                     case 2 -> {
                         System.out.println("Returning to main menu");
-                        start(); // Return to main menu
+                        start(); // Return to main menu (Assuming start() method is defined elsewhere)
                     }
                     default -> System.err.println("Invalid selection! Please choose a number between 1 and 2.");
                 }
@@ -97,30 +97,24 @@ public class MonitorManager {
             }
         }
     }
-    
+
     // Method to handle order selection by code
-    private void orderSelectionByCode(Scanner scan) {
+    private synchronized void orderSelectionByCode(Scanner scan) {
+        System.out.println("\n-----------------------------");
         System.out.print("Enter order code: ");
         String orderCode = scan.next(); // Get order code from user
         System.out.println("Base name: " + orderCode);
-        Thread thread = new Thread(() -> printOrderQueueing(orderCode)); // Print order in a separate thread
-        thread.start();
+        printOrderQueueing(orderCode);
     }
-    
+
     // Method to print order details from a file
-    public void printOrderQueueing(String order) {
-        Path filePath = Paths.get(ORDER_QUEUEING_PATH + order + ".txt");    
+    public synchronized void printOrderQueueing(String order) {
+        Path filePath = FILE_ROOT.resolve(order + ".txt");
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath.toFile()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
-                try {
-                    Thread.sleep(1000); // Delay for 1 second between lines
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); // Restore interrupted status
-                    System.err.println("Thread was interrupted.");
-                }
             }
         } catch (IOException ex) {
             System.err.println("Order not found or could not read the file.");

@@ -19,12 +19,18 @@ import java.util.Scanner;
 public class PosKioskSystem {
 
     public static void main(String[] args) {
+    
+        PosKioskSystem main = new PosKioskSystem();
+        main.startSystem();
+    }
+    
+    public void startSystem(){
+        Scanner scan = new Scanner(System.in);
         IFoodItemRepository itemRepo = new FoodItemRepository();
         KioskManager kioskSystem = new KioskManager(itemRepo);
         CashierManager cashierSystem = new CashierManager();
         MonitorManager monitorSystem = new MonitorManager();
-
-        Scanner scan = new Scanner(System.in);
+        
         while (true) {
             try{
                 System.out.println("\nWelcome to the Customer End System!");
@@ -32,7 +38,7 @@ public class PosKioskSystem {
                 System.out.println("2. Cashier System");
                 System.out.println("3. Monitor System");
                 System.out.println("4. Exit");
-                System.out.print("Selection: ");
+                System.out.print("\nSelection: ");
                 int choice = scan.nextInt();
                 scan.nextLine();
 
@@ -52,5 +58,6 @@ public class PosKioskSystem {
                 scan.nextLine();
             }
         }
+    
     }
 }

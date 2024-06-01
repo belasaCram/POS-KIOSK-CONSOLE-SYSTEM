@@ -7,6 +7,7 @@ package FileSetup;
 import Objects.QueueingOrder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -42,14 +43,16 @@ public class QueueingOrderRepository {
         return orders;
     }
 
-    public void saveQueueingOrder(QueueingOrder order){
+    public synchronized void saveQueueingOrder(QueueingOrder order) {
         queueingOrder.add(order);
     }
     
-    public void DeleteQueueingOrder(String orderCode){
-        for(QueueingOrder order : queueingOrder){
-            if(order.getCode().equals(orderCode)){
-                queueingOrder.remove(order);
+    public synchronized void deleteQueueingOrder(String orderCode) {
+        Iterator<QueueingOrder> iterator = queueingOrder.iterator();
+        while (iterator.hasNext()) {
+            QueueingOrder order = iterator.next();
+            if (order.getCode().equals(orderCode)) {
+                iterator.remove();
             }
         }
     }
