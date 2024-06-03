@@ -33,7 +33,7 @@ public class PosKioskSystem {
         
         while (true) {
             try{
-                System.out.println("\nWelcome to the Customer End System!");
+                System.out.println("\nSelect a system!");
                 System.out.println("1. Kiosk System");
                 System.out.println("2. Cashier System");
                 System.out.println("3. Monitor System");

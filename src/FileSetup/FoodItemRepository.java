@@ -18,14 +18,14 @@ public class FoodItemRepository implements IFoodItemRepository{
     public FoodItemRepository() {
         items = new ArrayList<>();
         items.add(new FoodItem(1, "Ice Cream", 50, 1));
-        items.add(new FoodItem(2, "Ice Chocolate", 30, 1));
+        items.add(new FoodItem(2, "Halo-Halo", 30, 1));
         items.add(new FoodItem(3, "Sundae", 20, 1));
         items.add(new FoodItem(4, "Mc Chicken", 190, 2));
         items.add(new FoodItem(5, "Chicken Fillet", 190, 2));
-        items.add(new FoodItem(6, "Siken Diwata", 190, 2));
-        items.add(new FoodItem(7, "Gin", 190, 3));
-        items.add(new FoodItem(8, "Alfonso", 190, 3));
-        items.add(new FoodItem(9, "Emperador", 190, 3));
+        items.add(new FoodItem(6, "Burger Steak", 190, 2));
+        items.add(new FoodItem(7, "Coke Float", 190, 3));
+        items.add(new FoodItem(8, "Regular Sprite", 190, 3));
+        items.add(new FoodItem(9, "Regular Nestea", 190, 3));
     }
 
     public List<FoodItem> getFoodItemsByCategory(int categoryId) {

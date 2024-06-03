@@ -32,7 +32,7 @@ public class CashierManager {
 
         while (true) {
             try {
-                System.out.println("1. See Orders\n2. Exit");
+                System.out.println("\n1. See Orders\n2. Exit");
                 System.out.print("\nSelection: ");
                 int choice = scan.nextInt(); // Get user input
                 scan.nextLine(); // Clear the buffer
@@ -56,6 +56,8 @@ public class CashierManager {
      
     // Method to get and display all orders
     public void getAllOrderList() {
+        Scanner scan = new Scanner(System.in);
+        
         System.out.println("\n-----------------------------");
         System.out.println("QueueingNo | Code");
         System.out.println("-----------------------------");
@@ -77,8 +79,6 @@ public class CashierManager {
         }
         
         System.out.println("-----------------------------");
-
-        Scanner scan = new Scanner(System.in);
 
         while (true) {
             System.out.println("1. Checkout\n2. Refresh\n3. Return to main menu");
@@ -111,22 +111,25 @@ public class CashierManager {
 
         if (orderList.isEmpty()) {
             System.out.println("-----------------------------");
-            System.out.println("Order with code " + orderCode + " not found.");
+            System.out.println("Order with code not found.");
             System.out.println("-----------------------------");
             return;
         }
 
         String queueingNo = String.valueOf(orderList.get(0).getQueueingNo());
-        
         System.out.println("-----------------------------");
         System.out.println("QueueingNo: " + queueingNo);
         System.out.println("Code: " + orderCode);
         System.out.println("-----------------------------");
 
-        // Display order details
+        double total = 0.0; // Initialize total
+        // Display order details and calculate total
         for (QueueingOrder order : orderList) {
             System.out.printf("%-15s x %-3d: $%-7.2f%n", order.getName(), order.getQty(), order.getPrice());
+            total += order.getPrice() * order.getQty() ; // Accumulate the price
         }
+        System.out.println("-----------------------------");
+        System.out.printf("Total: $%.2f%n", total); // Display the total
         System.out.println("-----------------------------");
         orderApproval(orderList); // Proceed to order approval
     }
@@ -135,7 +138,7 @@ public class CashierManager {
     public void orderApproval(List<QueueingOrder> orders) {
         // Simulate approval logic
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Do you approve this order? (yes/no): ");
+        System.out.print("\nDo you approve this order? (yes/no): ");
 
         String approval = scanner.nextLine().trim().toLowerCase();
         if (approval.equals("yes")) {
@@ -166,33 +169,35 @@ public class CashierManager {
             writer.write("Order No: " + queueingNo + "\n");
             writer.write("-----------------------------\n");
 
-            double subtotal = 0.0;
+            double total = 0.0;
             for (QueueingOrder order : orders) {
                 writer.write(String.format("%-15s x %-3d: $%-7.2f%n", order.getName(), order.getQty(), order.getPrice()));
-                subtotal += order.getQty() * order.getPrice();
+                total += order.getQty() * order.getPrice();
             }
 
-            double tax = calculateTax(subtotal, 0.08); // Calculate the tax
-            double total = subtotal + tax;
-            writer.write("-----------------------------\n");
-            writer.write(String.format("Subtotal: $%.2f%n", subtotal));
-            writer.write(String.format("Tax (8%%): $%.2f%n", tax));
             writer.write("-----------------------------\n");
             writer.write(String.format("Total: $%.2f%n", total));
             writer.write("-----------------------------\n");
             writer.write("Thank you for your purchase!\n");
             writer.write("-----------------------------\n");
             System.out.println("Receipt has been printed.");
+
         } catch (IOException e) {
             System.err.println("Error writing to file: " + e.getMessage());
         }
         
         QueueingOrderRepository.getInstance().deleteQueueingOrder(orders.get(0).getCode());
         orders.clear();
+        deleteKioskReceipt(queueingNo);
     }
     
-    // Utility method to calculate tax
-    private static double calculateTax(double subtotal, double taxRate) {
-        return subtotal * taxRate;
+    private synchronized void deleteKioskReceipt(String fileName){
+        Path file = Paths.get("Storage\\KioskReceipts");
+        Path filePath = Paths.get(file.toAbsolutePath() + "\\" + fileName + ".txt");
+        try{
+            Files.deleteIfExists(filePath);
+        }catch(IOException ex){
+            System.out.println("Cannot find Kiosk Receipt");
+        }
     }
 }

@@ -179,17 +179,15 @@ public class KioskManager {
 
     // Method to display orders in the cart
     private void displayOrders(List<Order> orders) {
-        double subtotal = 0.0;
+        double total = 0.0;
         System.out.println("\n----- Your Cart -----");
         for (Order order : orders) {
             System.out.printf("%-10s x %-3d: $%-7.2f%n", order.getName(), order.getQty(), order.getPrice());
-            subtotal += order.getQty() * order.getPrice(); // Calculate subtotal
+            total += order.getQty() * order.getPrice(); // Calculate subtotal
         }
         
-        double tax = calculateTax(subtotal, 0.08); // Calculate tax
-        double total = subtotal + tax; // Calculate total
         System.out.println("----------------------");
-        System.out.printf("Subtotal: $%.2f%nTax (8%%): $%.2f%nTotal: $%.2f%n", subtotal, tax, total);
+        System.out.printf("Total: $%.2f%n", total);
     }
 
     // Method to print receipt and save queueing order
@@ -202,27 +200,24 @@ public class KioskManager {
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)) {
             writer.write("-----------------------------\n");
             writer.write("Order No: " + queueingNo + "\n");
+            writer.write("Order Code: " + orderCode + "\n");
             writer.write("-----------------------------\n");
 
-            double subtotal = 0.0;
+            double total = 0.0;
             for (Order order : orders) {
                 writer.write(String.format("%-15s x %-3d: $%-7.2f%n", order.getName(), order.getQty(), order.getPrice()));
                 // Save queueing order
                 QueueingOrder newOrder = new QueueingOrder(queueingNo, orderCode, order.getName(), order.getQty(), order.getPrice(), false);
                 QueueingOrderRepository.getInstance().saveQueueingOrder(newOrder);
-                subtotal += order.getQty() * order.getPrice(); // Calculate subtotal
+                total += order.getQty() * order.getPrice(); // Calculate subtotal
             }
 
-            double tax = calculateTax(subtotal, 0.08); // Calculate tax
-            double total = subtotal + tax; // Calculate total
-            writer.write("-----------------------------\n");
-            writer.write(String.format("Subtotal: $%.2f%n", subtotal));
-            writer.write(String.format("Tax (8%%): $%.2f%n", tax));
             writer.write("-----------------------------\n");
             writer.write(String.format("Total: $%.2f%n", total));
             writer.write("-----------------------------\n");
             System.out.println("Receipt has been printed.");
-            writer.write("-----------------------------\n");
+            writer.flush();
+
             OrderRepository.getInstance().clearOrder(); // Clear the cart
 
             start(); // Go back to main menu
@@ -249,11 +244,6 @@ public class KioskManager {
             scan.next();
         }
         return scan.nextInt();
-    }
-
-    // Utility method to calculate tax
-    private static double calculateTax(double subtotal, double taxRate) {
-        return subtotal * taxRate;
     }
 
     // Utility method to generate a random queueing number

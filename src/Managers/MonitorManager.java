@@ -49,7 +49,6 @@ public class MonitorManager {
     }
     
     private void displayApprovedOrders() {
-        Scanner scan = new Scanner(System.in);
         System.out.println("\n-----------------------------");
         System.out.println("Approved Orders:");
         System.out.println("Code");
@@ -72,45 +71,47 @@ public class MonitorManager {
         }
 
         System.out.println("-----------------------------");
-
-        while (true) {
-            try {
-                System.out.println("1. Select Order");
-                System.out.println("2. Back");
-                System.out.print("\nSelection: ");
-                int choice = scan.nextInt(); // Get user input
-                scan.nextLine(); // Clear the buffer
-
-                switch (choice) {
-                    case 1 -> {
-                        orderSelectionByCode(scan); // Select order by code
-                    } 
-                    case 2 -> {
-                        System.out.println("Returning to main menu");
-                        start(); // Return to main menu (Assuming start() method is defined elsewhere)
-                    }
-                    default -> System.err.println("Invalid selection! Please choose a number between 1 and 2.");
-                }
-            } catch (InputMismatchException ex) {
-                System.err.println("Invalid Input!");
-                scan.nextLine(); // Clear the invalid input
-            }
-        }
+        orderSelectionByCode();
+//        while (true) {
+//            try {
+//                System.out.println("1. Select Order");
+//                System.out.println("2. Back");
+//                System.out.print("\nSelection: ");
+//                int choice = scan.nextInt(); // Get user input
+//                scan.nextLine(); // Clear the buffer
+//
+//                switch (choice) {
+//                    case 1 -> {
+//                        orderSelectionByCode(scan); // Select order by code
+//                    } 
+//                    case 2 -> {
+//                        System.out.println("Returning to main menu");
+//                        start(); // Return to main menu (Assuming start() method is defined elsewhere)
+//                    }
+//                    default -> System.err.println("Invalid selection! Please choose a number between 1 and 2.");
+//                }
+//            } catch (InputMismatchException ex) {
+//                System.err.println("Invalid Input!");
+//                scan.nextLine(); // Clear the invalid input
+//            }
+//        }
     }
 
     // Method to handle order selection by code
-    private synchronized void orderSelectionByCode(Scanner scan) {
-        System.out.println("\n-----------------------------");
+    private synchronized void orderSelectionByCode() {
+        Scanner scan = new Scanner(System.in);
+        System.out.println("If you want to go back type exit");
         System.out.print("Enter order code: ");
         String orderCode = scan.next(); // Get order code from user
-        System.out.println("Base name: " + orderCode);
+        if (orderCode.equalsIgnoreCase("exit")) {
+            start();
+        }
         printOrderQueueing(orderCode);
     }
 
     // Method to print order details from a file
     public synchronized void printOrderQueueing(String order) {
         Path filePath = FILE_ROOT.resolve(order + ".txt");
-
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath.toFile()))) {
             String line;
             while ((line = reader.readLine()) != null) {
