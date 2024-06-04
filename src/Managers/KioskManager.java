@@ -48,6 +48,7 @@ public class KioskManager {
                 System.out.print("\nSelection: ");
                 int choice = getIntInput(scan); // Get user input
                 scan.nextLine(); // Clear the buffer
+                
                 switch (choice) {
                     case 1 -> chooseCategory(); // Option to choose category
                     case 2 -> viewCart(); // Option to view cart
@@ -195,7 +196,7 @@ public class KioskManager {
         int queueingNo = generateQueueingNo(); // Generate queueing number
         String orderCode = generateRandomCode(); // Generate random order code
         Path fileRoot = Paths.get("Storage\\KioskReceipts");
-        Path filePath = Paths.get( fileRoot + "\\" + queueingNo + ".txt");
+        Path filePath = Paths.get( fileRoot.toAbsolutePath() + "\\" + queueingNo + ".txt");
 
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)) {
             writer.write("-----------------------------\n");
@@ -248,6 +249,6 @@ public class KioskManager {
 
     // Utility method to generate a random queueing number
     private static int generateQueueingNo() {
-        return new Random().nextInt(999999);
+        return new Random().nextInt(999);
     }
 }

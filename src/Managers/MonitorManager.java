@@ -20,7 +20,7 @@ import java.util.Scanner;
  */
 public class MonitorManager {
 
-    private Path FILE_ROOT = Paths.get("Storage\\CashierReceipts");
+    private final Path FILE_ROOT = Paths.get("Storage\\CashierReceipts");
     
     // Main method to start the monitor system
     public void start() {
@@ -66,35 +66,10 @@ public class MonitorManager {
                 System.out.println("No approved orders found.");
             }
         } catch (IOException ex) {
-            System.err.println("Error finding the files");
-            ex.printStackTrace();
+            System.err.println("Error finding the order!");
         }
-
         System.out.println("-----------------------------");
         orderSelectionByCode();
-//        while (true) {
-//            try {
-//                System.out.println("1. Select Order");
-//                System.out.println("2. Back");
-//                System.out.print("\nSelection: ");
-//                int choice = scan.nextInt(); // Get user input
-//                scan.nextLine(); // Clear the buffer
-//
-//                switch (choice) {
-//                    case 1 -> {
-//                        orderSelectionByCode(scan); // Select order by code
-//                    } 
-//                    case 2 -> {
-//                        System.out.println("Returning to main menu");
-//                        start(); // Return to main menu (Assuming start() method is defined elsewhere)
-//                    }
-//                    default -> System.err.println("Invalid selection! Please choose a number between 1 and 2.");
-//                }
-//            } catch (InputMismatchException ex) {
-//                System.err.println("Invalid Input!");
-//                scan.nextLine(); // Clear the invalid input
-//            }
-//        }
     }
 
     // Method to handle order selection by code
@@ -103,14 +78,37 @@ public class MonitorManager {
         System.out.println("If you want to go back type exit");
         System.out.print("Enter order code: ");
         String orderCode = scan.next(); // Get order code from user
+        
         if (orderCode.equalsIgnoreCase("exit")) {
             start();
         }
-        printOrderQueueing(orderCode);
+        
+        try{
+            Path filePath = printOrderQueueing(orderCode);
+            System.out.println("1. Serve Order\n2. Back\n");
+            System.out.print("Selection: ");
+            int choice = scan.nextInt();
+            scan.nextLine();
+
+            switch(choice){
+                case 1 -> {
+                    Files.deleteIfExists(filePath);
+                    System.out.println("Order is served...");
+                }
+                case 2 -> {
+                    System.out.println("Going back to main menu...");
+                    start();
+                    break;
+                }
+                default -> System.out.println("Invalid input!");
+            }
+        }catch(IOException ex){
+            System.err.println("Having a trouble in serving an order....");
+        }
     }
 
     // Method to print order details from a file
-    public synchronized void printOrderQueueing(String order) {
+    public synchronized Path printOrderQueueing(String order) {
         Path filePath = FILE_ROOT.resolve(order + ".txt");
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath.toFile()))) {
             String line;
@@ -120,5 +118,6 @@ public class MonitorManager {
         } catch (IOException ex) {
             System.err.println("Order not found or could not read the file.");
         }
+        return filePath;
     }
 }
