@@ -72,17 +72,19 @@ public class MonitorManager {
         orderSelectionByCode();
     }
 
+    //region Utilities
+
     // Method to handle order selection by code
     private synchronized void orderSelectionByCode() {
         Scanner scan = new Scanner(System.in);
         System.out.println("If you want to go back type exit");
         System.out.print("Enter order code: ");
         String orderCode = scan.next(); // Get order code from user
-        
+
         if (orderCode.equalsIgnoreCase("exit")) {
             start();
         }
-        
+
         while(true){
             try{
                 Path filePath = printOrderQueueing(orderCode);
@@ -126,4 +128,6 @@ public class MonitorManager {
         }
         return filePath;
     }
+
+    //endregion
 }

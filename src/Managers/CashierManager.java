@@ -122,6 +122,7 @@ public class CashierManager {
         System.out.println("Do you approve this order? (yes)");
         System.out.println("Any other input will cancel the order. To go back, type 'back'.");
         System.out.print("Input: ");
+        scan.nextLine();
 
         String approval = scan.nextLine().trim().toLowerCase();
 
@@ -135,7 +136,7 @@ public class CashierManager {
     // Method to print the receipt of an order
     public void printReceipt(List<QueueingOrder> orders) {
         String code = orders.get(0).getCode();
-        Path filePath = Paths.get("Storage/CashierReceipts/" + code + ".txt");
+        Path filePath = Paths.get("Storage\\CashierReceipts\\" + code + ".txt");
 
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)) {
             writer.write("-----------------------------\n");
@@ -159,15 +160,15 @@ public class CashierManager {
         }
 
         QueueingOrderRepository.getInstance().deleteQueueingOrder(code);
-        orders.clear();
         deleteKioskReceipt(orders.get(0).getQueueingNo());
+        orders.clear();
     }
     
     //region Utilities
 
     // Method to delete kiosk receipt
     private synchronized void deleteKioskReceipt(int queueingNo) {
-        Path filePath = Paths.get("Storage/KioskReceipts/" + queueingNo + ".txt");
+        Path filePath = Paths.get("Storage\\KioskReceipts\\" + queueingNo + ".txt");
         try {
             Files.deleteIfExists(filePath);
         } catch (IOException ex) {
