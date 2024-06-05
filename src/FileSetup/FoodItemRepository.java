@@ -28,6 +28,8 @@ public class FoodItemRepository implements IFoodItemRepository{
         items.add(new FoodItem(9, "Regular Nestea", 190, 3));
     }
 
+    //region Functions
+
     public List<FoodItem> getFoodItemsByCategory(int categoryId) {
         List<FoodItem> filteredFoodItems = new ArrayList<>();
         for (FoodItem item : items) {
@@ -46,4 +48,6 @@ public class FoodItemRepository implements IFoodItemRepository{
         }
         return null;
     }
+
+    //endregion
 }

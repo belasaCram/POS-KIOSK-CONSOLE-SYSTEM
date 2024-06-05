@@ -83,27 +83,33 @@ public class MonitorManager {
             start();
         }
         
-        try{
-            Path filePath = printOrderQueueing(orderCode);
-            System.out.println("1. Serve Order\n2. Back\n");
-            System.out.print("Selection: ");
-            int choice = scan.nextInt();
-            scan.nextLine();
+        while(true){
+            try{
+                Path filePath = printOrderQueueing(orderCode);
+                System.out.println("1. Serve Order\n2. Back\n");
+                System.out.print("Selection: ");
+                int choice = scan.nextInt();
+                scan.nextLine();
 
-            switch(choice){
-                case 1 -> {
-                    Files.deleteIfExists(filePath);
-                    System.out.println("Order is served...");
+                switch(choice){
+                    case 1 -> {
+                        Files.deleteIfExists(filePath);
+                        System.out.println("Order is served...");
+                        displayApprovedOrders();
+                    }
+                    case 2 -> {
+                        System.out.println("Going back to main menu...");
+                        start();
+                        break;
+                    }
+                    default -> System.out.println("Invalid input!");
                 }
-                case 2 -> {
-                    System.out.println("Going back to main menu...");
-                    start();
-                    break;
-                }
-                default -> System.out.println("Invalid input!");
+            }catch(IOException ex){
+                System.err.println("Having a trouble in serving an order....");
+            }catch(InputMismatchException ex){
+                System.err.println("Invalid Input!");
+                scan.nextLine();
             }
-        }catch(IOException ex){
-            System.err.println("Having a trouble in serving an order....");
         }
     }
 
@@ -116,7 +122,7 @@ public class MonitorManager {
                 System.out.println(line);
             }
         } catch (IOException ex) {
-            System.err.println("Order not found or could not read the file.");
+            System.err.println("Order not found....");
         }
         return filePath;
     }

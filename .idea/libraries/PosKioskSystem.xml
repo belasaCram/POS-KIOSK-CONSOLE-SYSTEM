@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="PosKioskSystem">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/dist/PosKioskSystem.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

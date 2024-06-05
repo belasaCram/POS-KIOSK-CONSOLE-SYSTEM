@@ -25,26 +25,22 @@ import poskiosksystem.PosKioskSystem;
  */
 public class CashierManager {
     
+    private final Scanner scan = new Scanner(System.in);
+
     // Main method to start the cashier system
     public void start() {
-        Scanner scan = new Scanner(System.in);
         System.out.println("\n--------POS-MACHINE--------");
 
         while (true) {
             try {
                 System.out.println("\n1. See Orders\n2. Exit");
-                System.out.print("\nSelection: ");
-                int choice = scan.nextInt(); // Get user input
+                System.out.print("Selection: ");
+                int choice = scan.nextInt();
                 scan.nextLine(); // Clear the buffer
 
                 switch (choice) {
-                    case 1 -> getAllOrderList(); // Display all orders
-                    case 2 -> {
-                        System.out.println("Thank you for using the POS System. Goodbye!");
-                        PosKioskSystem main = new PosKioskSystem();
-                        main.startSystem();
-                        break;
-                    }
+                    case 1 -> getAllOrderList();
+                    case 2 -> exitSystem();
                     default -> System.out.println("Invalid Selection!");
                 }
             } catch (InputMismatchException ex) {
@@ -53,120 +49,97 @@ public class CashierManager {
             }
         }
     }
-     
+
     // Method to get and display all orders
     public void getAllOrderList() {
-        Scanner scan = new Scanner(System.in);
-        
         System.out.println("\n-----------------------------");
         System.out.println("QueueingNo | Code");
         System.out.println("-----------------------------");
 
         Set<String> displayedCodes = new HashSet<>();
-        // Retrieve and display all unique queueing orders
-        for (QueueingOrder order : QueueingOrderRepository.getInstance().getAllQueueingOrder()) {
-            if (!displayedCodes.contains(order.getCode())) {
+        QueueingOrderRepository repo = QueueingOrderRepository.getInstance();
+
+        for (QueueingOrder order : repo.getAllQueueingOrder()) {
+            if (displayedCodes.add(order.getCode())) {
                 System.out.println(order.getQueueingNo() + " | " + order.getCode());
-                displayedCodes.add(order.getCode());
             }
         }
-        
-        if(displayedCodes.isEmpty()){
-            System.out.println("--- No orders yet ---");
-            System.out.println("-----------------------------");
 
-            return;
+        if (displayedCodes.isEmpty()) {
+            System.out.println("--- No orders yet ---");
         }
-        
         System.out.println("-----------------------------");
 
+        manageOrders();
+    }
+
+    // Method to manage orders
+    private void manageOrders() {
         while (true) {
             System.out.println("1. Checkout\n2. Refresh\n3. Return to main menu");
             try {
-                System.out.print("\nSelection: ");
-                int choice = scan.nextInt(); // Get user input
+                System.out.print("Selection: ");
+                int choice = scan.nextInt();
                 scan.nextLine(); // Clear the buffer
 
                 switch (choice) {
                     case 1 -> {
                         System.out.print("Enter Order Code: ");
-                        String orderCode = scan.next(); // Get the order code from the user
-                        getOrderByCode(orderCode); // Display order details by code
+                        getOrderByCode(scan.next());
                         return;
                     }
-                    case 2 -> getAllOrderList(); // Refresh the list of orders
-                    case 3 -> start(); // Return to the main menu
+                    case 2 -> getAllOrderList();
+                    case 3 -> start();
                     default -> System.out.println("Invalid input. Please try again.");
                 }
             } catch (InputMismatchException ex) {
-                System.err.println("Input Invalid!");
+                System.err.println("Invalid Input!");
                 scan.nextLine(); // Clear the invalid input
             }
         }
     }
-    
-    // Method to get order details by code
-    public void getOrderByCode(String orderCode) {
-        List<QueueingOrder> orderList = QueueingOrderRepository.getInstance().getAllQueueingOrderByCode(orderCode);
 
-        if (orderList.isEmpty()) {
-            System.out.println("-----------------------------");
-            System.out.println("Order with code not found.");
-            System.out.println("-----------------------------");
-            return;
-        }
-
+    // Method to display order details
+    private void displayOrderDetails(List<QueueingOrder> orderList) {
         String queueingNo = String.valueOf(orderList.get(0).getQueueingNo());
         System.out.println("-----------------------------");
         System.out.println("QueueingNo: " + queueingNo);
-        System.out.println("Code: " + orderCode);
+        System.out.println("Code: " + orderList.get(0).getCode());
         System.out.println("-----------------------------");
 
-        double total = 0.0; // Initialize total
-        // Display order details and calculate total
+        double total = 0.0;
         for (QueueingOrder order : orderList) {
             System.out.printf("%-15s x %-3d: $%-7.2f%n", order.getName(), order.getQty(), order.getPrice());
-            total += order.getPrice() * order.getQty() ; // Accumulate the price
+            total += order.getPrice() * order.getQty();
         }
         System.out.println("-----------------------------");
-        System.out.printf("Total: $%.2f%n", total); // Display the total
+        System.out.printf("Total: $%.2f%n", total);
         System.out.println("-----------------------------");
-        orderApproval(orderList); // Proceed to order approval
     }
-    
+
     // Method to handle order approval
     public void orderApproval(List<QueueingOrder> orders) {
-        // Simulate approval logic
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("\nDo you approve this order? (yes/no): ");
+        System.out.println("Do you approve this order? (yes)");
+        System.out.println("Any other input will cancel the order. To go back, type 'back'.");
+        System.out.print("Input: ");
 
-        String approval = scanner.nextLine().trim().toLowerCase();
-        if (approval.equals("yes")) {
-            System.out.println("Order approved. Processing payment...");
-            printReceipt(orders); // Print the receipt
-            // Mark order as approved
-            for (QueueingOrder order : orders) {
-                order.setStatus(true);
-            }
-        } else {
-            System.out.println("Order not approved. Cancelling order...");
-            // Remove the order from the queueing system
-            for (QueueingOrder order : orders) {
-                QueueingOrderRepository.getInstance().deleteQueueingOrder(order.getCode());
-            }
+        String approval = scan.nextLine().trim().toLowerCase();
+
+        switch (approval) {
+            case "yes" -> approveOrder(orders);
+            case "back" -> getAllOrderList();
+            default -> cancelOrder(orders);
         }
     }
-    
+
     // Method to print the receipt of an order
     public void printReceipt(List<QueueingOrder> orders) {
-        String code = String.valueOf(orders.get(0).getCode());
-        String queueingNo = String.valueOf(orders.get(0).getQueueingNo());
-        Path file = Paths.get("Storage\\CashierReceipts");
-        Path filePath = Paths.get (file.toAbsolutePath() + "\\" + code + ".txt");
+        String code = orders.get(0).getCode();
+        Path filePath = Paths.get("Storage/CashierReceipts/" + code + ".txt");
 
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)) {
             writer.write("-----------------------------\n");
-            writer.write("Order No: " + queueingNo + "\n");
+            writer.write("Order No: " + orders.get(0).getQueueingNo() + "\n");
             writer.write("-----------------------------\n");
 
             double total = 0.0;
@@ -181,23 +154,62 @@ public class CashierManager {
             writer.write("Thank you for your purchase!\n");
             writer.write("-----------------------------\n");
             System.out.println("Receipt has been printed.");
-
         } catch (IOException e) {
             System.err.println("Error writing to file: " + e.getMessage());
         }
-        
-        QueueingOrderRepository.getInstance().deleteQueueingOrder(orders.get(0).getCode());
+
+        QueueingOrderRepository.getInstance().deleteQueueingOrder(code);
         orders.clear();
-        deleteKioskReceipt(queueingNo);
+        deleteKioskReceipt(orders.get(0).getQueueingNo());
     }
     
-    private synchronized void deleteKioskReceipt(String fileName){
-        Path file = Paths.get("Storage\\KioskReceipts");
-        Path filePath = Paths.get(file.toAbsolutePath() + "\\" + fileName + ".txt");
-        try{
+    //region Utilities
+
+    // Method to delete kiosk receipt
+    private synchronized void deleteKioskReceipt(int queueingNo) {
+        Path filePath = Paths.get("Storage/KioskReceipts/" + queueingNo + ".txt");
+        try {
             Files.deleteIfExists(filePath);
-        }catch(IOException ex){
-            System.out.println("Cannot find Kiosk Receipt");
+        } catch (IOException ex) {
+            System.err.println("Cannot find Kiosk Receipt");
         }
     }
+
+    // Method to get order details by code
+    public void getOrderByCode(String orderCode) {
+        List<QueueingOrder> orderList = QueueingOrderRepository.getInstance().getAllQueueingOrderByCode(orderCode);
+
+        if (orderList.isEmpty()) {
+            System.out.println("-----------------------------");
+            System.out.println("Order with code not found.");
+            System.out.println("-----------------------------");
+            return;
+        }
+
+        displayOrderDetails(orderList);
+        orderApproval(orderList);
+    }
+
+    // Method to approve order
+    private void approveOrder(List<QueueingOrder> orders) {
+        System.out.println("Order approved. Processing payment...");
+        printReceipt(orders);
+        orders.forEach(order -> order.setStatus(true));
+    }
+
+    // Method to cancel order
+    private void cancelOrder(List<QueueingOrder> orders) {
+        System.out.println("Order not approved. Cancelling order...");
+        QueueingOrderRepository repo = QueueingOrderRepository.getInstance();
+        orders.forEach(order -> repo.deleteQueueingOrder(order.getCode()));
+    }
+
+    // Method to exit the system
+    private void exitSystem() {
+        System.out.println("Thank you for using the POS System. Goodbye!");
+        PosKioskSystem main = new PosKioskSystem();
+        main.startSystem();
+    }
+
+    //endregion
 }

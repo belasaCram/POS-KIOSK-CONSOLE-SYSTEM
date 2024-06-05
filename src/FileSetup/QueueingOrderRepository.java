@@ -28,11 +28,13 @@ public class QueueingOrderRepository {
         }
         return instance;
     }
-    
+
+    //region Functions
+
     public List<QueueingOrder> getAllQueueingOrder(){
         return Collections.unmodifiableList(queueingOrder);
     }
-    
+
     public List<QueueingOrder> getAllQueueingOrderByCode(String orderCode){
         List<QueueingOrder> orders = new ArrayList<>();
         for(QueueingOrder order : queueingOrder){
@@ -46,7 +48,7 @@ public class QueueingOrderRepository {
     public synchronized void saveQueueingOrder(QueueingOrder order) {
         queueingOrder.add(order);
     }
-    
+
     public synchronized void deleteQueueingOrder(String orderCode) {
         Iterator<QueueingOrder> iterator = queueingOrder.iterator();
         while (iterator.hasNext()) {
@@ -56,4 +58,6 @@ public class QueueingOrderRepository {
             }
         }
     }
+
+    //endregion
 }
